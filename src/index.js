@@ -4,3 +4,9 @@ import App from './app.js'
 
 
 export default ReactDOM.render(<App />, document.getElementById('root'))
+
+// import { Elm } from './Main.elm'
+
+// Elm.Main.init({
+//   node: document.getElementById('root')
+// })

@@ -1,12 +1,14 @@
 import React from 'react';
+import Elm from 'react-elm-components'; 
+import Timer from './Main.elm';
 
 
 const App = () => {
 
   return (
-    <h1>
-      Hi
-    </h1>
+    <>
+      <Elm src={Timer.Elm.Main} />
+    </>
   )
 } 
 
