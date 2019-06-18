@@ -5,6 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Time
+import Debug
 
 
 main =
@@ -45,6 +46,17 @@ type Msg
     | Start
 
 
+toMinsAndSecs: Int -> (Int, Int)
+toMinsAndSecs number = 
+  let 
+    secs =
+      number
+          |> remainderBy 60
+
+    mins = number // 60 
+  in 
+    (mins, secs)
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -52,10 +64,36 @@ update msg model =
             ( { model | input = newInput }, Cmd.none )
 
         Start ->
-            ( { model | started = True }, Cmd.none )
+            let
+                totalSeconds =
+                    case String.toInt model.input of
+                        Just minutes ->
+                            minutes * 60 |> Debug.log "mins"
+
+
+                        Nothing ->
+                            0    
+                
+                (mins, secs) = toMinsAndSecs totalSeconds
+
+                started =
+                    if totalSeconds == 0 then
+                        False
+
+                    else
+                        True
+            in
+            ( { model | started = started, secs = secs, mins = mins, remaining = totalSeconds }, Cmd.none )
 
         Tick _ ->
-            ( model , Cmd.none)
+          let 
+            newRemaining = model.remaining - 1 
+            (newMins, newSecs) = toMinsAndSecs newRemaining
+          in
+            ( { model | mins = newMins,  secs = newSecs, remaining = newRemaining}, Cmd.none )  
+
+
+
 -- subscriptions
 
 
@@ -75,7 +113,7 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div [ class "minInput" ]
-        [ input [ placeholder "enter mins", value model.input, onInput Change ] []
-        , div [] [ text model.input ]
+        [ input [ placeholder "enter mins", value model.input, onInput Change, type_ "number" ] []
+        , div [] [ text (String.fromInt model.secs) ]
         , button [ onClick Start ] [ text "Start" ]
         ]
