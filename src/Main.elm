@@ -38,13 +38,6 @@ init _ =
 
 --update
 
-
-type Msg
-    = Change String
-    | Tick Time.Posix
-    | Start
-
-
 toMinsAndSecs : Int -> ( Int, Int )
 toMinsAndSecs number =
     let
@@ -66,6 +59,19 @@ isActive number =
     else
         True
 
+toSeconds: String -> Int
+toSeconds number = 
+  case String.toInt number of
+    Just minutes ->
+        minutes * 60
+
+    Nothing ->
+        0
+
+type Msg
+    = Change String
+    | Tick Time.Posix
+    | Start
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -75,13 +81,7 @@ update msg model =
 
         Start ->
             let
-                totalSeconds =
-                    case String.toInt model.input of
-                        Just minutes ->
-                            minutes * 60
-
-                        Nothing ->
-                            0
+                totalSeconds = toSeconds model.input
 
                 ( mins, secs ) =
                     toMinsAndSecs totalSeconds
