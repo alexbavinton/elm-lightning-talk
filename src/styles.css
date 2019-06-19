@@ -1,0 +1,16 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-height: 100vh;
+  font-size: 5em;
+  font-family: monospace;
+  background-color: #c9ddff;
+}
+
+.clock {
+  margin-bottom: 0.2em;
+
+}

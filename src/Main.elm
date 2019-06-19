@@ -1,28 +1,27 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Browser
+import Debug
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Time
-import Debug
 
 
 main =
     Browser.element { init = init, update = update, view = view, subscriptions = subscriptions }
 
 
+port done : Bool -> Cmd msg
+
+
 
 --model
 
 
-type alias TimeRemain =
-    ( Int, Int )
-
-
 type alias Model =
     { input : String
-    , started : Bool
+    , active : Bool
     , remaining : Int
     , mins : Int
     , secs : Int
@@ -31,7 +30,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { input = "", started = False, remaining = 0, mins = 0, secs = 0 }
+    ( { input = "", active = False, remaining = 0, mins = 0, secs = 0 }
     , Cmd.none
     )
 
@@ -46,16 +45,27 @@ type Msg
     | Start
 
 
-toMinsAndSecs: Int -> (Int, Int)
-toMinsAndSecs number = 
-  let 
-    secs =
-      number
-          |> remainderBy 60
+toMinsAndSecs : Int -> ( Int, Int )
+toMinsAndSecs number =
+    let
+        secs =
+            number
+                |> remainderBy 60
 
-    mins = number // 60 
-  in 
-    (mins, secs)
+        mins =
+            number // 60
+    in
+    ( mins, secs )
+
+
+isActive : Int -> Bool
+isActive number =
+    if number == 0 then
+        False
+
+    else
+        True
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -68,29 +78,38 @@ update msg model =
                 totalSeconds =
                     case String.toInt model.input of
                         Just minutes ->
-                            minutes * 60 |> Debug.log "mins"
-
+                            minutes * 60
 
                         Nothing ->
-                            0    
-                
-                (mins, secs) = toMinsAndSecs totalSeconds
+                            0
 
-                started =
-                    if totalSeconds == 0 then
-                        False
+                ( mins, secs ) =
+                    toMinsAndSecs totalSeconds
 
-                    else
-                        True
+                active =
+                    isActive totalSeconds
             in
-            ( { model | started = started, secs = secs, mins = mins, remaining = totalSeconds }, Cmd.none )
+            ( { model | active = active, secs = secs, mins = mins, remaining = totalSeconds }, Cmd.none )
 
         Tick _ ->
-          let 
-            newRemaining = model.remaining - 1 
-            (newMins, newSecs) = toMinsAndSecs newRemaining
-          in
-            ( { model | mins = newMins,  secs = newSecs, remaining = newRemaining}, Cmd.none )  
+            let
+                newRemaining =
+                    model.remaining - 1
+
+                active =
+                    isActive newRemaining
+
+                ( newMins, newSecs ) =
+                    toMinsAndSecs newRemaining
+
+                command =
+                    if not active then
+                        done True
+
+                    else
+                        Cmd.none
+            in
+            ( { model | mins = newMins, secs = newSecs, remaining = newRemaining, active = active }, command )
 
 
 
@@ -99,7 +118,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.started then
+    if model.active then
         Time.every 1000 Tick
 
     else
@@ -112,8 +131,10 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-    div [ class "minInput" ]
-        [ input [ placeholder "enter mins", value model.input, onInput Change, type_ "number" ] []
-        , div [] [ text (String.fromInt model.secs) ]
-        , button [ onClick Start ] [ text "Start" ]
+    div [ class "timer" ]
+        [ div [ class "clock" ] [ text (String.fromInt model.mins ++ ":" ++ String.fromInt model.secs) ]
+        , div []
+            [ input [ class "input", placeholder "enter mins", value model.input, onInput Change, type_ "number" ] []
+            , button [ onClick Start ] [ text "Start" ]
+            ]
         ]
