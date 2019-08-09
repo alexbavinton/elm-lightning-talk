@@ -14,9 +14,7 @@ const App = () => {
       setDone(done);
     })
   }
-
-
-  piojopjol ihoihoh 
+ ijooiho
   useEffect(() => {
     const getQuote = async () => {
       const { data } = await axios.get('http://quotes.rest/qod.json?category=inspire'); 
